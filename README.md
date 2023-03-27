@@ -64,6 +64,11 @@ em.persist(memberB);
 //커밋하는 순간 데이터베이스에 INSERT SQL을 보냄.
 transaction.commit(); // [트랜잭션] 커밋
 ```
+   
+### 영속성 컨텍스트를 플러시하는 방법(자동 호출을 권함)
+1. em.flush() - 직접 호출
+2. 트랜잭션 커밋 - 플러시 자동 호출
+3. JPQL 쿼리 실행 - 플러시 자동 호출
 <br/>
 
 ## 변경 감지(Dirty Checking)
