@@ -130,10 +130,20 @@ transaction.commit();
 > * 프록시가 실제 객체를 상속한 타입을 가지고 있기 때문
 > * 프록시 객체는 실제 객체에 대한 참조를 보관 => 프록시 객체의 메서드 호출 시, 실제 객체의 메서드를 호출
 
-## 즉시 로딩(Eager LOADING)
+## 즉시 로딩(Eager Loading)
 * 예를 들어, Member와 Team이 서로 있으면 지연 로딩과 다르게 Member를 로딩을 할 때, Team까지 같이 Join을 해서 가져온다.
 * **가급적 지연 로딩만 사용(특히 실무에서)**
 * 즉시 로딩을 적용하면 예상하지 못한 SQL이 발생
 * 즉시 로딩은 JPQL에서 N+1 문제를 일으킨다
 * @ManyToOne, @OneToOne은 기본이 즉시 로딩 -> LAZY로 설정
-* @OneToMany, @ManyToMany는 기본이 지연 로
+* @OneToMany, @ManyToMany는 기본이 지연 로딩
+
+# 영속성 전이(CASCADE)
+* 특정 엔티티를 영속 상태로 만들 때 연관된 엔티티도 함께 영속 상태로 만들고 싶을 때
+* 부모 엔티티를 저장할 때 자식 엔티티도 함께 저장
+* **(주의사항!) 만약 자식 엔티티가 다른 엔티티와도 연관되어 있으면 사용X**
+```Java
+// childList에 대해서도 영속성 전이
+@OneToMany(mappedBy="parent", cascade=CascadeType.ALL)
+private List<Child> childList = new ArrayList<>();
+```
