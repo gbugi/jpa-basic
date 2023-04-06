@@ -147,3 +147,83 @@ transaction.commit();
 @OneToMany(mappedBy="parent", cascade=CascadeType.ALL)
 private List<Child> childList = new ArrayList<>();
 ```
+
+# 임베디드 타입(Embedded Type)
+* 주로 기본 값 타입을 모아서 만들어서 복합 값 타입이라고도 한다.
+
+## 임베디드 타입 사용법
+* @Embeddable: 값 타입을 정의하는 곳에 표시
+* @Embedded: 값 타입을 사용하는 곳에 표시
+* 기본 생성자 필수
+
+```Java
+   @Entity
+   public class Member {
+       //기간 Period
+       @Embedded
+       private Period workPeriod;
+   }
+```
+```Java
+   @Embeddable
+   public class Period {
+      private LocalDateTime startDate;
+      private LocalDateTime endDate;
+}
+```
+## 임베디드 타입과 테이블 매핑
+* 임베디드 타입은 엔티티의 값일 뿐이다.
+* 임베디드 타입을 사용하기 전과 후에 **매핑하는 테이블은 같다.**
+* 객체와 테이블을 아주 세밀하게(find-grained) 매핑하는 것이 가능
+* 잘 설계한 ORM 애플리케이션은 매핑한 테이블의 수보다 클래스의 수가 더 많음
+
+# JPQL
+* JPA를 사용하면 엔티티 객체를 중심으로 개발
+* 문제는 검색 쿼리
+* 검색을 할 때도 테이블이 아닌 엔티티 객체를 대상으로 검색
+* 모든 DB 데이터를 객체로 변환해서 검색하는 것은 불가능
+* 애플리케이션이 필요한 데이터만 DB에서 불러오려면 결국 검색 조건이 포함된 SQL이 필요
+---
+* JPA는 SQL을 추상화한 JPQL이라는 객체 지향 쿼리 언어 제공
+* SQL과 문법 유사, SELECT, FROM, WHERE, GROUP BY, HAVING, JOIN 지원
+* JPQL은 엔티티 객체를 대상으로 쿼리
+* SQL은 데이터베이스 테이블을 대상으로 쿼리
+* SQL을 추상화해서 특정 데이터베이스 SQL에 의존X
+* JPQL을 한마디로 정의하면 객체 지향 SQL
+```Java
+//검색
+String jpql = "select m From Member m where m.name like '%hello%'";
+List<Member> result = em.createQuery(jpql, Member.class).getResultList();
+```
+하지만 위의 방식은 정적쿼리만 가능하다.
+따라서 대안으로 **Criteria**를 사용하면 동적쿼리도 가능하게 하는데, **Criteria**예시를 살펴보자.
+```Java
+CriteriaBuilder cb = em.getCriteriaBuilder();
+CriteriaQuery<Member> query = cb.createQuery(Member.class);
+
+//루트 클래스 (조회를 시작할 클래스)
+Root<Member> m = query.from(Member.class);
+
+//쿼리 생성 
+CriteriaQuery<Member> cq = query.select(m).where(cb.equal(m.get("username", "kim"));
+
+List<Member> resultList = em.createQuery(cq).getResultList();
+```
+하지만 Criteria는 너무 복잡하고 실용성이 없기에, Criteria 대신에 **QueryDSL**사용을 권장한다.
+# QueryDSL
+* 문자가 아닌 자바코드로 JPQL을 작성할 수 있음
+* JPQL 빌더 역할
+* 컴파일 시점에 문법 오류를 찾을 수 있음
+* **동적쿼리** 작성 편리함
+* 단순하고 쉬움
+* **실무 사용 권장**
+```Java
+JPAFactoryQuery query = new JPAQueryFactory(em);
+QMember m = QMmeber.member;
+
+List<Member> list = query.selectFrom(m)
+                          .where(m.age.gt(18))
+                          .orderBy(m.name.desc())
+                          .fetch();
+```
+QueryDSL은 이번강의에선 이정도만 알아보고, JPQL에 대해서 더 알아보기로 한다.
