@@ -130,3 +130,48 @@ public class Delivery {
 * 정리하면 
    - Parent와 Child 엔티티의 라이프사이클이 똑같을때      
    - 소유자가 하나일 때(Parent엔티티만 Child객체를 소유할때)
+
+# Service단에서의 Transactional
+* Service class에서는 @Transactinal 어노테이션을 붙여줘야한다.   
+
+아래 예시코드와 함께 보자.
+```Java
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class MemberService {
+
+    private final MemberRepository memberRepository;
+
+    /**
+     * 회원 가입
+     */
+    @Transactional
+    public Long join(Member member) {
+
+        validateDuplicateMember(member); //중복 회원 검증
+        memberRepository.save(member);
+        return member.getId();
+    }
+
+    private void validateDuplicateMember(Member member) {
+        List<Member> findMembers = memberRepository.findByName(member.getName());
+        if (!findMembers.isEmpty()) {
+            throw new IllegalStateException("이미 존재하는 회원입니다.");
+        }
+    }
+    
+    //회원 전체 조회
+    public List<Member> findMembers() {
+        return memberRepository.findAll();
+    }
+
+    public Member findOne(Long memberId) {
+        return memberRepository.findOne(memberId);
+    }
+}
+```
+* join 메서드는 회원가입 메서드이다. 따라서 @Transactional을 그대로 넣어준다(리소스를 많이 사용해야 하기 때문)
+* findMembers와 findOne 메서드는 **회원조회** 메서드이다. 단순 조회만 하기에, 리소스를 많이 사용하지 말라고 DB에 요청해야하는데, 그때 사용하는 옵션이 **@Transactional(readonly = true)** 옵션이다.
+* Service class내에 등록,수정, 삭제 메서드가 많다면 @Transactional을 class 어노테이션에, 단순 조회 매서드가 많다면 @Transactional(readonly = true)를 class 어노테이션에 넣어준다.
+* @Transactional 어노테이션은 기본이 false이다.
